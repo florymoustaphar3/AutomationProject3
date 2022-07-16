@@ -20,7 +20,22 @@ commands:
             aws s3 rm s3://udapeople-<<parameters.Workflow_ID>> --recursive
             aws cloudformation delete-stack --stack-name frontend-<<parameters.Workflow_ID>>
             aws cloudformation delete-stack --stack-name backend-<<parameters.Workflow_ID>>    
-            
+
+  revert-migrations:
+    description: Revert the last migration if successfully run in the current workflow
+    parameters:
+      # Add parameter here
+      Workflow_ID:
+        type: string
+        default: ${CIRCLE_WORKFLOW_ID:0:7}     
+    steps:
+      - run:
+          name: Revert migrations
+          # Add when this will run
+          when: on_fail
+          command: |
+            SUCCESS=$(curl --insecure  https://kvdb.io/QUtm9gL5qrSrMSXw5s2L1C/migration_<< parameters.Workflow_ID >>)
+
 jobs:
   build-frontend:
     docker:
@@ -234,8 +249,9 @@ jobs:
           paths:
               - project/backend/migrations_dump.log
      # Here's where you will add some code to rollback on failure
-      # - revert-migrations
-      # - destroy-environment
+              - revert-migrations
+              #- destroy-environment
+              
 workflows:
   myCICD_WorkFlow:
     jobs:

@@ -294,9 +294,58 @@ jobs:
           root: ~/
           paths:
             - backend_ip.txt
+            
       # Here's where you will add some code to rollback on failure
       - revert-migrations
-      - destroy-environment                 
+      - destroy-environment    
+
+  deploy-backend:
+    docker:
+      # Docker image here that supports Ansible
+      - image: python:3.9.1-alpine3.12
+    steps:
+      # Checkout code from git
+      - checkout
+      # Add ssh keys with fingerprint
+      - add_ssh_keys:
+          fingerprints:
+            - "2a:cb:34:93:57:52:56:11:04:f6:6e:b2:46:3d:31:10"
+      # attach workspace
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Install dependencies
+          command: |
+            # your code here
+            apk update
+            apk add --upgrade curl
+            apk add --upgrade tar
+            apk add --upgrade gzip
+            apk add --update ansible
+            apk add --update nodejs  
+            apk add --update npm
+            pip3 install awscli
+      - run:
+          name: Deploy backend
+          command: |
+            # your code here
+            cd backend
+            npm i
+            npm run build
+            ls -lh
+            cd ..
+            pwd
+            tar -C backend -czvf artifact.tar.gz .
+            tar -ztvf artifact.tar.gz
+            mkdir .circleci/ansible/roles/deploy/files/
+            mv artifact.tar.gz .circleci/ansible/roles/deploy/files/
+            cd .circleci/ansible
+            echo "Contents  of the inventory.txt file is -------"
+            cat inventory.txt
+            ansible-playbook -i inventory.txt deploy-backend.yml
+      # Here's where you will add some code to rollback on failure
+      - revert-migrations
+      - destroy-environment             
 workflows:
   myCICD_WorkFlow:
     jobs:

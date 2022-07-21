@@ -479,7 +479,7 @@ jobs:
             fi
       # Here's where you will add some code to rollback on failure          
       # - revert-migrations
-      # - destroy-environment
+      # - destroy-environment 
 
 workflows:
   myCICD_WorkFlow:
